@@ -1,11 +1,293 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
+}
+
+enum BookStatus {
+  WANTED
+  OWNED
+  ORDERED
+}
+
+enum BookFormat {
+  PAPERBACK
+  HARDCOVER
+  EBOOK
+  AUDIOBOOK
+  OTHER
+}
+
+enum READSTATUS {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum RecommendationSource {
+  OPENAI
+  GOOGLE
+  OTHER
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  name          String?
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  libraryEntries    UserBook[]
+  wishlists         Wishlist[]
+  copies            Copy[]
+  recommendations   Recommendation[]
+  readingProgress   ReadingProgress[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+ 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+ 
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+ 
+  @@unique([identifier, token])
+}
+
+model Book {
+  id            Int           @id @default(autoincrement())
+  title         String
+  originalTitle String?
+  subtitle      String?
+  isbn          String?       @unique
+  releaseYear   Int?
+  translator    String?
+  coverImageUrl String?
+  language      String?
+  description   String?
+
+  publisherId   Int?
+  publisher     Publisher?    @relation(fields: [publisherId], references: [id])
+
+  seriesId      Int?
+  series        Series?       @relation(fields: [seriesId], references: [id])
+  seriesIndex   Int?
+
+  authors       BookAuthor[]
+  genres        BookGenre[]
+  copies        Copy[]
+  recommendations Recommendation[]
+  wishlistItems WishlistItem[]
+  libraryEntries UserBook[]
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model UserBook {
+  id        Int        @id @default(autoincrement())
+  user      User       @relation(fields: [userId], references: [id])
+  userId    String
+  book      Book       @relation(fields: [bookId], references: [id])
+  bookId    Int
+
+  status    BookStatus @default(WANTED) // WANTED / OWNED / FORMERLY_OWNED
+  rating    Int?                     // this user's rating
+  notes     String?
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([userId, bookId])         // one row per user+book
+}
+
+model Series {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+
+  books       Book[]
+}
+
+model Author {
+  id    Int          @id @default(autoincrement())
+  name  String       @unique
+  books BookAuthor[]
+}
+
+model Genre {
+  id    Int          @id @default(autoincrement())
+  name  String       @unique
+  books BookGenre[]
+}
+
+model Publisher {
+  id    Int          @id @default(autoincrement())
+  name  String       @unique
+  books Book[]
+}
+
+// Many-to-many between Book and Author
+model BookAuthor {
+  book      Book   @relation(fields: [bookId], references: [id])
+  bookId    Int
+  author    Author @relation(fields: [authorId], references: [id])
+  authorId  Int
+  sortOrder Int    @default(0)
+
+  @@id([bookId, authorId])
+}
+
+// Many-to-many between Book and Genre
+model BookGenre {
+  book    Book   @relation(fields: [bookId], references: [id])
+  bookId  Int
+  genre   Genre  @relation(fields: [genreId], references: [id])
+  genreId Int
+
+  @@id([bookId, genreId])
+}
+
+// Your physical (or digital) copies
+model Copy {
+  id         Int         @id @default(autoincrement())
+  book       Book        @relation(fields: [bookId], references: [id])
+  bookId     Int
+
+  owner      User        @relation(fields: [ownerId], references: [id])
+  ownerId    String
+
+  format     BookFormat
+  label      String?
+  acquiredAt DateTime?
+  location   String?
+  notes      String?
+  pageCount  Int?
+
+  loans      Loan[]
+  readingProgress ReadingProgress[]
+}
+
+model ReadingProgress {
+  id              Int        @id @default(autoincrement())
+  copy            Copy       @relation(fields: [copyId], references: [id])
+  user            User       @relation(fields: [userId], references: [id])
+  userId          String
+  copyId          Int
+  currentPage     Int
+  startedAt       DateTime   @default(now())
+  finishedAt      DateTime?
+  lastUpdatedAt   DateTime   @updatedAt
+
+  @@unique([userId, copyId])
+}
+
+// People you loan books to
+model Person {
+  id      Int     @id @default(autoincrement())
+  name    String
+  email   String?
+  phone   String?
+  notes   String?
+
+  loans   Loan[]
+}
+
+// Loan records (loan + return)
+model Loan {
+  id         Int       @id @default(autoincrement())
+  copy       Copy      @relation(fields: [copyId], references: [id])
+  copyId     Int
+  person     Person    @relation(fields: [personId], references: [id])
+  personId   Int
+  loanedAt   DateTime  @default(now())
+  dueAt      DateTime?
+  returnedAt DateTime?
+}
+
+model Wishlist {
+  id          Int            @id @default(autoincrement())
+  name        String         // "My wishlist", "Partner gifts", etc.
+  description String?
+
+  owner       User           @relation(fields: [ownerId], references: [id])
+  ownerId     String
+
+  items       WishlistItem[]
+  createdAt   DateTime       @default(now())
+
+  @@unique([ownerId, name]) // user can't have two lists with same name
+}
+
+model WishlistItem {
+  id          Int        @id @default(autoincrement())
+
+  wishlist    Wishlist   @relation(fields: [wishlistId], references: [id])
+  wishlistId  Int
+
+  book        Book       @relation(fields: [bookId], references: [id])
+  bookId      Int
+
+  notes       String?
+  priority    Int?
+  createdAt   DateTime   @default(now())
+
+  @@unique([wishlistId, bookId]) // same book only once per list
+}
+
+
+// AI recommendations *based on* a given Book
+model Recommendation {
+  id         Int                   @id @default(autoincrement())
+  baseBook   Book                  @relation(fields: [baseBookId], references: [id])
+  baseBookId Int
+
+  user       User                  @relation(fields: [userId], references: [id])
+  userId     String
+
+  title      String
+  author     String?
+  reason     String?
+  source     RecommendationSource
+  rank       Int?
+
+  createdAt  DateTime              @default(now())
 }
