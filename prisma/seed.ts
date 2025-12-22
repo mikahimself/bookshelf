@@ -2,7 +2,7 @@
 import { BookStatus, BookFormat } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
-const userId = process.env.SEED_USER;
+const userId = process.env.SEED_USER
 
 async function main() {
   // --- Authors ---
@@ -162,7 +162,7 @@ async function main() {
     },
     update: {},
     create: {
-      userId: userId,
+      userId: userId!,
       bookId: hitchhiker.id,
       status: BookStatus.OWNED,
       rating: 5
@@ -175,7 +175,7 @@ async function main() {
     },
     update: {},
     create: {
-      userId,
+      userId: userId!,
       bookId: eiEnaaEddy.id,
       status: BookStatus.OWNED,
       rating: 5
@@ -188,7 +188,7 @@ async function main() {
     },
     update: {},
     create: {
-      userId,
+      userId: userId!,
       bookId: elolliset.id,
       status: BookStatus.WANTED,
     }
@@ -203,7 +203,7 @@ async function main() {
       bookId: hitchhikerBook.id,
       format: BookFormat.PAPERBACK,
       location: 'Tampere',
-      ownerId: userId
+      ownerId: userId!
     },
   });
 
@@ -215,18 +215,18 @@ async function main() {
       format: BookFormat.HARDCOVER,
       label: 'First edition',
       location: 'Tampere',
-      ownerId: userId
+      ownerId: userId!
     },
   });
 
   // --- Example wishlist + items ---
   const myWishlist = await prisma.wishlist.upsert({
-    where: { ownerId_name: { ownerId: userId, name: "Toivelista"} },
+    where: { ownerId_name: { ownerId: userId!, name: "Toivelista"} },
     update: {},
     create: {
       name: 'My wishlist',
       description: 'Books I want to buy for myself.',
-      ownerId: userId
+      ownerId: userId!
     },
   });
 
@@ -251,6 +251,9 @@ async function main() {
   console.log('Seed completed');
 }
 
+if (userId === undefined) {
+  console.error("No user ID provided through process.env.SEED_USER");
+} else {
 main()
   .catch((e) => {
     console.error(e);
@@ -259,3 +262,5 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
+}

@@ -1,0 +1,16 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: bookshelf-app
+    ports:
+      - "4321:3000"
+    environment:
+      - DATABASE_URL="file://app/data/sqlite.db"
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - /app/node_modules
+      - /app/.next
+    command: sh -c "npx prisma generate && npm run dev"
