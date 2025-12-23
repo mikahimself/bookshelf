@@ -20,6 +20,13 @@ enum BookFormat {
   OTHER
 }
 
+enum VectorStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 enum READSTATUS {
   NOT_STARTED
   IN_PROGRESS
@@ -93,7 +100,7 @@ model VerificationToken {
 }
 
 model Book {
-  id            Int           @id @default(autoincrement())
+  id            String        @id @default(uuid())
   title         String
   originalTitle String?
   subtitle      String?
@@ -127,7 +134,7 @@ model UserBook {
   user      User       @relation(fields: [userId], references: [id])
   userId    String
   book      Book       @relation(fields: [bookId], references: [id])
-  bookId    Int
+  bookId    String
 
   status    BookStatus @default(WANTED) // WANTED / OWNED / FORMERLY_OWNED
   rating    Int?                     // this user's rating
@@ -168,7 +175,7 @@ model Publisher {
 // Many-to-many between Book and Author
 model BookAuthor {
   book      Book   @relation(fields: [bookId], references: [id])
-  bookId    Int
+  bookId    String
   author    Author @relation(fields: [authorId], references: [id])
   authorId  Int
   sortOrder Int    @default(0)
@@ -179,7 +186,7 @@ model BookAuthor {
 // Many-to-many between Book and Genre
 model BookGenre {
   book    Book   @relation(fields: [bookId], references: [id])
-  bookId  Int
+  bookId  String
   genre   Genre  @relation(fields: [genreId], references: [id])
   genreId Int
 
@@ -190,7 +197,7 @@ model BookGenre {
 model Copy {
   id         Int         @id @default(autoincrement())
   book       Book        @relation(fields: [bookId], references: [id])
-  bookId     Int
+  bookId     String
 
   owner      User        @relation(fields: [ownerId], references: [id])
   ownerId    String
@@ -264,7 +271,7 @@ model WishlistItem {
   wishlistId  Int
 
   book        Book       @relation(fields: [bookId], references: [id])
-  bookId      Int
+  bookId      String
 
   notes       String?
   priority    Int?
@@ -278,7 +285,7 @@ model WishlistItem {
 model Recommendation {
   id         Int                   @id @default(autoincrement())
   baseBook   Book                  @relation(fields: [baseBookId], references: [id])
-  baseBookId Int
+  baseBookId String
 
   user       User                  @relation(fields: [userId], references: [id])
   userId     String
