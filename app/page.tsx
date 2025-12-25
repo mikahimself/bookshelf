@@ -4,6 +4,7 @@ import { SignOut } from "@/components/sign-out";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 
+
 export default async function Home() {
   const session = await auth()
   const books = await prisma.book.findMany({
@@ -15,10 +16,6 @@ export default async function Home() {
       }
     }
   });
- 
-  console.log(books[0].authors)
-  
-
 
   return (
     <div className="flex flex-col min-h-screen">

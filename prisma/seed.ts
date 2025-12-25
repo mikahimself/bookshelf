@@ -5,7 +5,20 @@ import { prisma } from '@/lib/prisma';
 const userId = process.env.SEED_USER
 
 async function main() {
-  // --- Authors ---
+  const user = await prisma.user.findFirst({
+  where: {
+    id: userId
+  }
+  })
+
+  if (user === null) {
+    console.log("User not found with ID", userId)
+    return;
+  } else {
+    console.log("Found user", user.name)
+  }
+
+
   const douglasAdams = await prisma.author.upsert({
     where: { name: 'Douglas Adams' },
     update: {},
@@ -26,7 +39,6 @@ async function main() {
     }
   })
 
-  // --- Genres ---
   const fiction = await prisma.genre.upsert({
     where: { name: 'Fiction' },
     update: {},
@@ -48,10 +60,9 @@ async function main() {
   const humour = await prisma.genre.upsert({
     where: { name: 'Humour' },
     update: {},
-    create: { name: 'humour' },
+    create: { name: 'Humour' },
   });
 
-  // --- Publishers ---
   const tammi = await prisma.publisher.upsert({
     where: { name: 'Tammi' },
     update: {},
@@ -64,7 +75,6 @@ async function main() {
     create: { name: 'Pan Books' },
   });
 
-  // --- Series ---
   const hitchhiker = await prisma.series.upsert({
     where: { name: "The Hitchhiker's Guide to the Galaxy" },
     update: {},
@@ -74,7 +84,7 @@ async function main() {
     },
   });
 
-  // --- Books ---
+
   const hitchhikerBook = await prisma.book.upsert({
     where: { isbn: '0330258648' },
     update: {},
@@ -152,18 +162,21 @@ async function main() {
       }
     }  
     }
-)
+  )
+
+  console.log("BookId: ", hitchhikerBook.id, "UserId", userId)
   
-
-
   await prisma.userBook.upsert({
     where: {
-      id: 1,
+      userId_bookId: {
+        userId: user.id,
+        bookId: hitchhikerBook.id
+      }
     },
     update: {},
     create: {
-      userId: userId!,
-      bookId: hitchhiker.id,
+      userId: user.id,
+      bookId: hitchhikerBook.id,
       status: BookStatus.OWNED,
       rating: 5
     }
@@ -171,7 +184,10 @@ async function main() {
 
   await prisma.userBook.upsert({
     where: {
-      id: 2,
+      userId_bookId: {
+        userId: user.id,
+        bookId: eiEnaaEddy.id
+      }
     },
     update: {},
     create: {
@@ -184,7 +200,10 @@ async function main() {
 
   await prisma.userBook.upsert({
     where: {
-      id: 3,
+      userId_bookId: {
+        userId: user.id,
+        bookId: elolliset.id
+      }
     },
     update: {},
     create: {
@@ -195,38 +214,48 @@ async function main() {
   })
 
 
-  // --- Copies (physical books you own) ---
   await prisma.copy.upsert({
-    where: { id: 1 }, // arbitrary; upsert makes it safe to re-run
+    where: { 
+      ownerId_bookId_format: {
+        ownerId: user.id,
+        bookId: hitchhikerBook.id,
+        format: BookFormat.PAPERBACK
+      }
+     },
     update: {},
     create: {
       bookId: hitchhikerBook.id,
       format: BookFormat.PAPERBACK,
       location: 'Tampere',
-      ownerId: userId!
+      ownerId: user.id
     },
   });
 
   await prisma.copy.upsert({
-    where: { id: 2,  },
+    where: {       
+      ownerId_bookId_format: {
+        ownerId: user.id,
+        bookId: eiEnaaEddy.id,
+        format: BookFormat.HARDCOVER
+      }
+    },
     update: {},
     create: {
       bookId: eiEnaaEddy.id,
       format: BookFormat.HARDCOVER,
       label: 'First edition',
       location: 'Tampere',
-      ownerId: userId!
+      ownerId: user.id
     },
   });
 
-  // --- Example wishlist + items ---
   const myWishlist = await prisma.wishlist.upsert({
-    where: { ownerId_name: { ownerId: userId!, name: "Toivelista"} },
+    where: { ownerId_name: { ownerId: user.id, name: "My wishlist"} },
     update: {},
     create: {
       name: 'My wishlist',
       description: 'Books I want to buy for myself.',
-      ownerId: userId!
+      ownerId: user.id
     },
   });
 
@@ -251,9 +280,6 @@ async function main() {
   console.log('Seed completed');
 }
 
-if (userId === undefined) {
-  console.error("No user ID provided through process.env.SEED_USER");
-} else {
 main()
   .catch((e) => {
     console.error(e);
@@ -263,4 +289,3 @@ main()
     await prisma.$disconnect();
   });
 
-}

@@ -111,10 +111,10 @@ model Book {
   language      String?
   description   String?
 
-  publisherId   Int?
   publisher     Publisher?    @relation(fields: [publisherId], references: [id])
+  publisherId   String?
 
-  seriesId      Int?
+  seriesId      String?
   series        Series?       @relation(fields: [seriesId], references: [id])
   seriesIndex   Int?
 
@@ -124,30 +124,31 @@ model Book {
   recommendations Recommendation[]
   wishlistItems WishlistItem[]
   libraryEntries UserBook[]
+  vectorStatus  VectorStatus @default(PENDING)
 
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 }
 
 model UserBook {
-  id        Int        @id @default(autoincrement())
+  id        String     @id @default(uuid())
   user      User       @relation(fields: [userId], references: [id])
   userId    String
   book      Book       @relation(fields: [bookId], references: [id])
   bookId    String
 
-  status    BookStatus @default(WANTED) // WANTED / OWNED / FORMERLY_OWNED
-  rating    Int?                     // this user's rating
+  status    BookStatus @default(WANTED)
+  rating    Int?
   notes     String?
 
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
-  @@unique([userId, bookId])         // one row per user+book
+  @@unique([userId, bookId])
 }
 
 model Series {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid())
   name        String   @unique
   description String?
 
@@ -155,45 +156,42 @@ model Series {
 }
 
 model Author {
-  id    Int          @id @default(autoincrement())
+  id    String          @id @default(uuid())
   name  String       @unique
   books BookAuthor[]
 }
 
 model Genre {
-  id    Int          @id @default(autoincrement())
+  id    String          @id @default(uuid())
   name  String       @unique
   books BookGenre[]
 }
 
 model Publisher {
-  id    Int          @id @default(autoincrement())
+  id    String          @id @default(uuid())
   name  String       @unique
   books Book[]
 }
 
-// Many-to-many between Book and Author
 model BookAuthor {
   book      Book   @relation(fields: [bookId], references: [id])
   bookId    String
   author    Author @relation(fields: [authorId], references: [id])
-  authorId  Int
+  authorId  String
   sortOrder Int    @default(0)
 
   @@id([bookId, authorId])
 }
 
-// Many-to-many between Book and Genre
 model BookGenre {
   book    Book   @relation(fields: [bookId], references: [id])
   bookId  String
   genre   Genre  @relation(fields: [genreId], references: [id])
-  genreId Int
+  genreId String
 
   @@id([bookId, genreId])
 }
 
-// Your physical (or digital) copies
 model Copy {
   id         Int         @id @default(autoincrement())
   book       Book        @relation(fields: [bookId], references: [id])
@@ -211,6 +209,8 @@ model Copy {
 
   loans      Loan[]
   readingProgress ReadingProgress[]
+
+  @@unique([ownerId, bookId, format])
 }
 
 model ReadingProgress {
@@ -227,7 +227,6 @@ model ReadingProgress {
   @@unique([userId, copyId])
 }
 
-// People you loan books to
 model Person {
   id      Int     @id @default(autoincrement())
   name    String
@@ -238,7 +237,6 @@ model Person {
   loans   Loan[]
 }
 
-// Loan records (loan + return)
 model Loan {
   id         Int       @id @default(autoincrement())
   copy       Copy      @relation(fields: [copyId], references: [id])
@@ -252,7 +250,7 @@ model Loan {
 
 model Wishlist {
   id          Int            @id @default(autoincrement())
-  name        String         // "My wishlist", "Partner gifts", etc.
+  name        String
   description String?
 
   owner       User           @relation(fields: [ownerId], references: [id])
@@ -261,7 +259,7 @@ model Wishlist {
   items       WishlistItem[]
   createdAt   DateTime       @default(now())
 
-  @@unique([ownerId, name]) // user can't have two lists with same name
+  @@unique([ownerId, name])
 }
 
 model WishlistItem {
@@ -277,11 +275,10 @@ model WishlistItem {
   priority    Int?
   createdAt   DateTime   @default(now())
 
-  @@unique([wishlistId, bookId]) // same book only once per list
+  @@unique([wishlistId, bookId])
 }
 
 
-// AI recommendations *based on* a given Book
 model Recommendation {
   id         Int                   @id @default(autoincrement())
   baseBook   Book                  @relation(fields: [baseBookId], references: [id])
