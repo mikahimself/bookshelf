@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import ClickBait from "@/components/click";
 import SignIn from "@/components/sign-in";
 import { SignOut } from "@/components/sign-out";
 import { prisma } from "@/lib/prisma";
@@ -38,6 +39,7 @@ export default async function Home() {
             </div>
           ))}
           </div>
+          <ClickBait></ClickBait>
         </main>
       </div>
         <footer className="bg-blue-900">footer</footer>
