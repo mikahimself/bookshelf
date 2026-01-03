@@ -33,7 +33,7 @@ export const gBookSearchItemSchema = z.object({
 export const gBooksApiResponseSchema = z.object({
   kind: z.string(),
   totalItems: z.number(),
-  items: z.array(gBookSearchItemSchema)
+  items: z.array(gBookSearchItemSchema).optional()
 })
 
 const gBookSearchResultItem = z.object({
