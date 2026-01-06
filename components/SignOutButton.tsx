@@ -1,5 +1,5 @@
 import { signOut } from "@/auth";
-import Button from "./Button";
+import Button from "./ui/Button";
 
 type SignOutButtonProps = {
   userName: string | undefined | null;

@@ -1,5 +1,5 @@
 import { signIn } from "@/auth";
-import Button from "./Button";
+import Button from "./ui/Button";
 
 export default function SignIn() {
   return (

@@ -1,6 +1,6 @@
 import { Session } from "next-auth";
-import SignIn from "./SignInButton";
-import { SignOut } from "./SignOutButton";
+import SignIn from "../SignInButton";
+import { SignOut } from "../SignOutButton";
 
 type HeaderProps = {
   session: Session | null;

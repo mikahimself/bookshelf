@@ -8,7 +8,7 @@ import {
   Html5QrcodeSupportedFormats,
 } from "html5-qrcode";
 import { useEffect, useRef, useState } from "react";
-import Button from "./Button";
+import Button from "./ui/Button";
 
 const scannerContainerId = "barcode-scanner-container";
 const formatsToSupport = [Html5QrcodeSupportedFormats.EAN_13];
