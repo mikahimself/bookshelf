@@ -10,7 +10,7 @@ import IconButton from "./IconButton";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import Button from "./Button";
 import SearchResults from "./SearchResults";
-import { ArrowLeftIcon, BackwardIcon } from "@heroicons/react/20/solid";
+import { ArrowLeftIcon } from "@heroicons/react/20/solid";
 
 type ModalProps = {
   showModal: boolean;
@@ -30,15 +30,22 @@ export default function Modal({
   const [title, setTitle] = useState("");
   const [isbn, setIsbn] = useState("");
   const [foundBooks, setFoundBooks] = useState<GoogleBookSearchItem[]>([]);
-  const [showResults, setShowResults] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("ENTER");
-  const [scrollHeight, setScrollHeight] = useState(110);
-  const [scanSuccess, setScanSuccess] = useState(false);
   const [previousTab, setPreviousTab] = useState<ActiveTab>("ENTER");
+  useKeyPressed({
+    keyCode: "Escape",
+    onKeyFunction: () => setShowModal(false),
+  });
+  useKeyPressed({ keyCode: "Enter", onKeyFunction: () => getBooks() });
+  const modalRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    setScrollHeight(foundBooks.length * 110);
-  }, [foundBooks.length]);
+    if (showModal) {
+      modalRef.current?.focus();
+    }
+  }, [showModal]);
+
+  useEffect(() => {}, [foundBooks.length]);
 
   const onChangeAuthor = (event: ChangeEvent<HTMLInputElement>) => {
     setAuthor(event.target.value);
@@ -74,10 +81,14 @@ export default function Modal({
           id="modal"
           className="fixed inset-0 z-50 flex h-screen w-screen items-center justify-center bg-black/50 backdrop-blur-xs"
         >
-          <div className="fixed top-[15%] bottom-[15%] left-1/2 flex w-[90%] max-w-3xl -translate-x-1/2 flex-col overflow-hidden rounded-lg bg-gray-100 text-black">
+          <div
+            ref={modalRef}
+            autoFocus
+            className="fixed top-[15%] bottom-[15%] left-1/2 flex w-[90%] max-w-3xl -translate-x-1/2 flex-col overflow-hidden rounded-lg bg-gray-100 text-black"
+          >
             <div
               id="modal-header"
-              className="flex flex-row justify-between p-3"
+              className="flex flex-row justify-between p-3 pl-5"
             >
               <div className="content-center font-semibold">Lisää kirja</div>
               <IconButton
@@ -117,7 +128,7 @@ export default function Modal({
               )}
             </div>
 
-            <div id="modal-content" className="flex-1 overflow-y-auto p-3">
+            <div id="modal-content" className="flex-1 overflow-y-auto p-5">
               {activeTab === "ENTER" && (
                 <div>
                   <div className="flex flex-col text-sm">

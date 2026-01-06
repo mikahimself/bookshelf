@@ -1,26 +1,24 @@
 import { useEffect } from "react";
 
 type OnKeyPressedProps = {
-  keyCode: string,
-  onKeyFunction: () => void
-}
+  keyCode: string;
+  onKeyFunction: () => void;
+};
 
-export default function useKeyPressed({ keyCode, onKeyFunction}: OnKeyPressedProps) {
+export default function useKeyPressed({
+  keyCode,
+  onKeyFunction,
+}: OnKeyPressedProps) {
   useEffect(() => {
-    console.log("Running event with", keyCode, " and", onKeyFunction)
     const keyPressHandler = (e: KeyboardEvent) => {
-      console.log(e)
       if (e.key === keyCode) {
-        console.log("Pressed", e.key)
-        onKeyFunction()
+        e.preventDefault();
+        onKeyFunction();
       }
-    }
+    };
 
-    window.addEventListener("keypress", (e) => keyPressHandler(e));
+    window.addEventListener("keyup", (e) => keyPressHandler(e));
 
-    return (
-      window.removeEventListener("keypress", keyPressHandler)
-    )
-  },
-  [keyCode, onKeyFunction])
+    return window.removeEventListener("keyup", (e) => keyPressHandler(e));
+  }, [keyCode, onKeyFunction]);
 }
